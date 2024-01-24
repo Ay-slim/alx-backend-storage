@@ -8,6 +8,24 @@ import redis
 import uuid
 
 
+def replay(store_method: Callable) -> None:
+    """
+    replay - Function to show method history
+    @store_method: Method whose history to show
+    Returns: Nothing
+    """
+    c_inst = store_method.__self__
+    i_key = store_method.__qualname__ + ":inputs"
+    o_key = store_method.__qualname__ + ":outputs"
+    count = int(c_inst.get(store_method.__qualname__))
+    inputs = c_inst._redis.lrange(i_key, 0, -1)
+    outputs = c_inst._redis.lrange(o_key, 0, -1)
+    print("Cache.store was called {} times".format(count))
+    for i in range(len(inputs)):
+        print("Cache.store(*({},)) -> {}".format(
+            inputs[i].decode("utf-8"), outputs[i].decode("utf-8")))
+
+
 def count_calls(method: Callable) -> Callable:
     """
     count_calls - Decorator to count calls
@@ -33,7 +51,6 @@ def call_history(method: Callable) -> Callable:
         if isinstance(self._redis, redis.Redis):
             i_key = method.__qualname__ + ":inputs"
             o_key = method.__qualname__ + ":outputs"
-            self._redis.incr(method.__qualname__)
             o_val = method(self, *args, **kwargs)
             self._redis.rpush(i_key, str(args))
             self._redis.rpush(o_key, o_val)
@@ -103,3 +120,10 @@ class Cache:
 # for value, fn in TEST_CASES.items():
 #     key = cache.store(value)
 #     assert cache.get(key, fn=fn) == value
+
+
+cache = Cache()
+cache.store("foo")
+cache.store("bar")
+cache.store(42)
+replay(cache.store)
