@@ -21,9 +21,9 @@ def replay(store_method: Callable) -> None:
     inputs = c_inst._redis.lrange(i_key, 0, -1)
     outputs = c_inst._redis.lrange(o_key, 0, -1)
     print("Cache.store was called {} times".format(count))
-    for i in range(len(inputs)):
+    for i, o in zip(inputs, outputs):
         print("Cache.store(*({},)) -> {}".format(
-            inputs[i].decode("utf-8"), outputs[i].decode("utf-8")))
+            i.decode("utf-8"), o.decode("utf-8")))
 
 
 def count_calls(method: Callable) -> Callable:
