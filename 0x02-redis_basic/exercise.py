@@ -22,6 +22,25 @@ def count_calls(method: Callable) -> Callable:
     return wrapper
 
 
+def call_history(method: Callable) -> Callable:
+    """
+    call_history - Decorator to store function i/o
+    @method: Callable method
+    Returns: A callable
+    """
+    @wraps(method)
+    def wrapper(self, *args, **kwargs) -> Any:
+        if isinstance(self._redis, redis.Redis):
+            i_key = method.__qualname__ + ":inputs"
+            o_key = method.__qualname__ + ":outputs"
+            self._redis.incr(method.__qualname__)
+            o_val = method(self, *args, **kwargs)
+            self._redis.rpush(i_key, str(args))
+            self._redis.rpush(o_key, o_val)
+        return o_val
+    return wrapper
+
+
 class Cache:
     """Cache class to store data with Redis"""
 
@@ -32,6 +51,7 @@ class Cache:
         self._redis = redis.Redis()
         self._redis.flushdb()
 
+    @call_history
     @count_calls
     def store(self, data: Union[str, bytes, int, float]) -> str:
         """
