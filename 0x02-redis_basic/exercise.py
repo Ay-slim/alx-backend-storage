@@ -2,7 +2,7 @@
 """Write string to Redis"""
 
 
-from typing import Union
+from typing import Union, Callable
 import redis
 import uuid
 
@@ -26,3 +26,44 @@ class Cache:
         key = str(uuid.uuid4())
         self._redis.set(key, data)
         return key
+
+    def get_str(self, val: bytes) -> str:
+        """
+        get_str - Function to parametize redis return byte
+        @val: Bytes value to parametize
+        Returns: String
+        """
+        return str(val)
+
+    def get_int(self, val: bytes) -> int:
+        """
+        get_int - Function to parametize redis return byte
+        @val: Bytes value to parametize
+        Returns: Integer
+        """
+        return int(val)
+
+    def get(self, key: str, fn: Callable = None) -> Union[
+            str, bytes, int, float, None]:
+        """
+        get - Fetch stored value with the appropriate type
+        @key: Key to fetch with
+        @fn: Appropriate calling function
+        """
+        raw_bytes = self._redis.get(key)
+
+        if fn is None or raw_bytes is None:
+            return raw_bytes
+        return fn(raw_bytes)
+
+# cache = Cache()
+
+# TEST_CASES = {
+#     b"foo": None,
+#     123: int,
+#     "bar": lambda d: d.decode("utf-8")
+# }
+
+# for value, fn in TEST_CASES.items():
+#     key = cache.store(value)
+#     assert cache.get(key, fn=fn) == value
