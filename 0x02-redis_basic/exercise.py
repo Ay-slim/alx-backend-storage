@@ -122,8 +122,8 @@ class Cache:
 #     assert cache.get(key, fn=fn) == value
 
 
-cache = Cache()
-cache.store("foo")
-cache.store("bar")
-cache.store(42)
-replay(cache.store)
+# cache = Cache()
+# cache.store("foo")
+# cache.store("bar")
+# cache.store(42)
+# replay(cache.store)
